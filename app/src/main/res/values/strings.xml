@@ -1,3 +1,21 @@
 <resources>
-    <string name="app_name">ignite</string>
+    <string name="app_name">Ignite</string>
+    <string name="status_loading">상태 로딩 중...</string>
+    <string name="toggle_master">자동 실행 및 종료 기능 사용</string>
+    <string name="title_app_shutdown_delay">앱 자동 종료 대기 시간 (초 단위)</string>
+    <string name="hint_app_delay">기본값: 60 (초)</string>
+    <string name="btn_save">저장</string>
+    <string name="title_system_shutdown_delay">휴대폰 전원 끄기 대기 시간 (분 단위)</string>
+    <string name="hint_system_delay">기본값: 90 (분)</string>
+    <string name="title_permissions">필수 권한 설정 (순서대로 진행)</string>
+    <string name="btn_request_notification">1. 알림 권한 요청</string>
+    <string name="btn_full_screen_intent">2. 전체 화면 알림 설정</string>
+    <string name="btn_draw_overlay">3. 다른 앱 위에 표시 허용</string>
+    <string name="btn_accessibility">4. 접근성 설정</string>
+    <string name="btn_restricted_settings">4-1. 제한된 설정 허용</string>
+    <string name="btn_battery_optimization">5. 배터리 최적화 해제</string>
+    <string name="title_manual_test">수동 테스트</string>
+    <string name="btn_test_tmap">Tmap</string>
+    <string name="btn_test_app_shutdown">앱 종료</string>
+    <string name="btn_test_system_shutdown">시스템 종료</string>
 </resources>

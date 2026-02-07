@@ -1,105 +1,198 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
-
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:background="#F0F0F0"
-        android:padding="12dp"
-        android:text="상태 로딩 중..."
-        android:textSize="14sp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="자동 종료 시간 설정 (분 단위)"
-        android:textStyle="bold"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <EditText
-            android:id="@+id/editDelayMinutes"
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="예: 1 (1분)"
-            android:inputType="number" />
+            android:layout_marginBottom="16dp"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:text="@string/status_loading"
+            android:textSize="14sp" />
 
-        <Button
-            android:id="@+id/btnSaveDelay"
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchMasterToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/toggle_master"
+            android:textSize="16sp"
+            android:checked="true"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 앱 자동 종료 설정 -->
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="저장" />
+            android:text="@string/title_app_shutdown_delay"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <EditText
+                android:id="@+id/editDelaySeconds"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/hint_app_delay"
+                android:importantForAutofill="no"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/btnSaveAppDelay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_save"
+                style="?android:attr/buttonBarButtonStyle"/>
+        </LinearLayout>
+
+        <!-- 시스템 자동 종료 설정 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title_system_shutdown_delay"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/editSystemDelayMinutes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/hint_system_delay"
+                android:importantForAutofill="no"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/btnSaveSystemDelay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_save"
+                style="?android:attr/buttonBarButtonStyle"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title_permissions"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnRequestNotification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_request_notification" />
+
+        <Button
+            android:id="@+id/btnFullScreenIntent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_full_screen_intent" />
+
+        <Button
+            android:id="@+id/btnDrawOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_draw_overlay" />
+
+        <!-- 접근성 관련 버튼들을 가로로 배치 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnAccessibility"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_accessibility"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"
+                style="?android:attr/buttonBarButtonStyle"/>
+
+            <Button
+                android:id="@+id/btnRestrictedSettings"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_restricted_settings"
+                android:textSize="12sp"
+                android:layout_marginStart="4dp"
+                style="?android:attr/buttonBarButtonStyle"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnBattery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_battery_optimization" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title_manual_test"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="4dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnTestNavi"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_test_tmap"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"
+                style="?android:attr/buttonBarButtonStyle"/>
+
+            <Button
+                android:id="@+id/btnTestShutdown"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_test_app_shutdown"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"
+                style="?android:attr/buttonBarButtonStyle"/>
+
+            <Button
+                android:id="@+id/btnTestSystemShutdown"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_test_system_shutdown"
+                android:textSize="12sp"
+                android:backgroundTint="#C62828"
+                style="?android:attr/buttonBarButtonStyle"/>
+
+        </LinearLayout>
+
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnAccessibility"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="1. 접근성 설정 열기" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="직접 설정: 설정→접근성→설치된 서비스→ignite→사용 중으로 변경"
-        android:textSize="12sp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:layout_marginBottom="12dp"/>
-
-
-    <Button
-        android:id="@+id/btnBattery"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="2. 배터리 최적화 해제" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="직접 설정: 설정→검색→'배터리 사용량 최적화'→전체 앱→ignite 해제"
-        android:textSize="12sp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:layout_marginBottom="16dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="수동 테스트"
-        android:textStyle="bold"
-        android:layout_gravity="center_horizontal"/>
-
-    <Button
-        android:id="@+id/btnTestNavi"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="테스트: Tmap 실행"
-        android:layout_marginTop="8dp"/>
-
-    <Button
-        android:id="@+id/btnTestShutdown"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="테스트: 설정 시간 후 모든 앱 종료" />
-
-    <Button
-        android:id="@+id/btnTestSystemShutdown"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="테스트: 시스템 종료 (90분 기능)"
-        android:backgroundTint="#C62828" />
-
-</LinearLayout>
+</ScrollView>

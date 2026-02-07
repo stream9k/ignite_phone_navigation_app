@@ -3,20 +3,17 @@ package com.example.ignite
 import android.accessibilityservice.AccessibilityService
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
 
 class MyAccessibilityService : AccessibilityService() {
 
@@ -24,7 +21,7 @@ class MyAccessibilityService : AccessibilityService() {
     private var powerReceiver: BroadcastReceiver? = null
     private lateinit var prefs: SharedPreferences
 
-    private val CHANNEL_ID = "CarNaviChannel"
+    private val channelId = "CarNaviChannel"
 
     // [전원 감지 로직]
     private fun registerPowerReceiver() {
@@ -71,7 +68,7 @@ class MyAccessibilityService : AccessibilityService() {
 
     override fun onCreate() {
         super.onCreate()
-        prefs = getSharedPreferences("CarNaviPrefs", MODE_PRIVATE)
+        prefs = getSharedPreferences("CarNaviPrefs", Context.MODE_PRIVATE)
         createNotificationChannel()
         registerPowerReceiver()
     }
@@ -110,16 +107,15 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Tmap 자동 실행 채널"
-            val descriptionText = "Tmap 자동 실행을 위한 알림 채널"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        // minSdkVersion이 28이므로 Build.VERSION_CODES.O(26) 검사는 불필요합니다.
+        val name = "Tmap 자동 실행 채널"
+        val descriptionText = "Tmap 자동 실행을 위한 알림 채널"
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(channelId, name, importance).apply {
+            description = descriptionText
         }
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
     // 타이머 및 종료 관련 함수들은 기존과 동일...

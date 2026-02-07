@@ -3,7 +3,6 @@ package com.example.ignite
 import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.AlertDialog
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -12,23 +11,24 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.net.toUri
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var statusText: TextView
     private lateinit var editDelaySeconds: EditText
     private lateinit var editSystemDelayMinutes: EditText
-    private lateinit var switchMasterToggle: Switch
+    private lateinit var switchMasterToggle: SwitchCompat
     private lateinit var prefs: SharedPreferences
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
         // 마스터 스위치 리스너
         switchMasterToggle.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean("is_master_enabled", isChecked).apply()
+            prefs.edit { putBoolean("is_master_enabled", isChecked) }
             val msg = if (isChecked) "자동 기능 활성화됨" else "자동 기능 비활성화됨"
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             updateStatus()
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
         val secondsText = editDelaySeconds.text.toString()
         if (secondsText.isNotEmpty()) {
             val seconds = secondsText.toInt()
-            prefs.edit().putInt("app_shutdown_delay_seconds", seconds).apply()
+            prefs.edit { putInt("app_shutdown_delay_seconds", seconds) }
             Toast.makeText(this, "앱 종료 대기 시간: ${seconds}초 저장됨", Toast.LENGTH_SHORT).show()
             updateStatus()
         } else {
@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         val minutesText = editSystemDelayMinutes.text.toString()
         if (minutesText.isNotEmpty()) {
             val minutes = minutesText.toInt()
-            prefs.edit().putInt("system_shutdown_delay_minutes", minutes).apply()
+            prefs.edit { putInt("system_shutdown_delay_minutes", minutes) }
             Toast.makeText(this, "시스템 종료 대기 시간: ${minutes}분 저장됨", Toast.LENGTH_SHORT).show()
             updateStatus()
         } else {
@@ -150,13 +150,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun canDrawOverlays(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Settings.canDrawOverlays(this)
-        } else true
+        // minSdk가 28이므로 Build.VERSION.SDK_INT >= M (23) 체크 불필요
+        return Settings.canDrawOverlays(this)
     }
 
     private fun isAccessibilityServiceEnabled(): Boolean {
-        val am = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val am = getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
         return am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK).any {
             it.id.contains(packageName)
         }
@@ -177,7 +176,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFullScreenIntentSettings() {
         val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14+
-            Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, Uri.parse("package:$packageName"))
+            Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, "package:$packageName".toUri())
         } else { // Android 10-13
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                 putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
@@ -186,13 +185,13 @@ class MainActivity : AppCompatActivity() {
         try {
             startActivity(intent)
             Toast.makeText(this, "'Ignite'의 전체 화면 알림 관련 스위치를 켜주세요.", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Toast.makeText(this, "설정 화면을 열 수 없습니다.", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun openDrawOverlaySettings() {
-        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri()))
     }
 
     private fun openAccessibilitySettings() {
@@ -203,16 +202,17 @@ class MainActivity : AppCompatActivity() {
     private fun openAppInfoSettings() {
         try {
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            intent.data = Uri.parse("package:$packageName")
+            intent.data = "package:$packageName".toUri()
             startActivity(intent)
             Toast.makeText(this, "우측 상단 메뉴 [⋮] -> [제한된 설정 허용]을 눌러주세요.", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Toast.makeText(this, "설정 화면 이동 실패", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun openBatterySettings() {
-        startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
+        // REQUEST_IGNORE_BATTERY_OPTIMIZATIONS 정책 위반 경고는 개인용 앱이므로 무시합니다.
+        startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, "package:$packageName".toUri()))
     }
     
     // --- 테스트 함수들 ---
