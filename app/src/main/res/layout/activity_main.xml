@@ -93,6 +93,13 @@
         android:id="@+id/btnTestShutdown"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="테스트: 설정 시간 후 종료" />
+        android:text="테스트: 설정 시간 후 모든 앱 종료" />
+
+    <Button
+        android:id="@+id/btnTestSystemShutdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="테스트: 시스템 종료 (90분 기능)"
+        android:backgroundTint="#C62828" />
 
 </LinearLayout>

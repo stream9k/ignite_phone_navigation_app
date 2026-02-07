@@ -52,7 +52,6 @@ class MyAccessibilityService : AccessibilityService() {
 
     override fun onCreate() {
         super.onCreate()
-        // SharedPreferences 초기화
         prefs = getSharedPreferences("CarNaviPrefs", Context.MODE_PRIVATE)
         registerPowerReceiver()
     }
@@ -64,6 +63,22 @@ class MyAccessibilityService : AccessibilityService() {
             powerReceiver = null
         }
     }
+
+    // MainActivity로부터 명령을 받아서 처리하는 부분
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            "START_SHUTDOWN_TIMER" -> {
+                Toast.makeText(this, "(테스트) 모든 앱 종료 타이머 시작", Toast.LENGTH_SHORT).show()
+                startShutdownTimer()
+            }
+            "ACTION_SYSTEM_SHUTDOWN_NOW" -> {
+                Toast.makeText(this, "(테스트) 시스템 즉시 종료", Toast.LENGTH_SHORT).show()
+                shutdownSystem()
+            }
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
 
     // [Tmap 실행 함수]
     private fun launchTmap() {
@@ -78,31 +93,31 @@ class MyAccessibilityService : AccessibilityService() {
 
     // [타이머 관련 함수]
     private fun startShutdownTimer() {
-        // 저장된 설정값 불러오기 (기본 1분)
         val delayMinutes = prefs.getInt("shutdown_delay_minutes", 1)
-        val delayMillis = delayMinutes * 60 * 1000L // 분을 밀리초로 변환
+        val delayMillis = delayMinutes * 60 * 1000L
 
         handler.removeCallbacks(shutdownRunnable)
         handler.postDelayed(shutdownRunnable, delayMillis)
 
-        // 90분 화면 끄기 타이머는 고정
-        handler.removeCallbacks(screenOffRunnable)
-        handler.postDelayed(screenOffRunnable, 5400 * 1000) // 90분
+        handler.removeCallbacks(systemShutdownRunnable)
+        handler.postDelayed(systemShutdownRunnable, 5400 * 1000)
     }
 
     private fun cancelShutdown() {
         handler.removeCallbacks(shutdownRunnable)
-        handler.removeCallbacks(screenOffRunnable)
+        handler.removeCallbacks(systemShutdownRunnable)
     }
 
+    // 모든 앱 종료 타이머
     private val shutdownRunnable = Runnable {
         Log.d("CarNavi", "설정 시간 경과: 모든 앱 종료 시도")
         killAllApps()
     }
 
-    private val screenOffRunnable = Runnable {
-        Log.d("CarNavi", "90분 경과: 화면 잠금")
-        performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
+    // 시스템 종료 타이머
+    private val systemShutdownRunnable = Runnable {
+        Log.d("CarNavi", "90분 경과: 시스템 종료 시도")
+        shutdownSystem()
     }
 
     // [모든 앱 종료 기능]
@@ -119,7 +134,6 @@ class MyAccessibilityService : AccessibilityService() {
                 if (closeAllNode != null) {
                     Log.d("CarNavi", "✅ '모두 닫기' 버튼 찾음! 클릭!")
                     closeAllNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    Toast.makeText(applicationContext, "모두 닫기 완료!", Toast.LENGTH_SHORT).show()
                     handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 500)
                 } else {
                     Log.e("CarNavi", "❌ '모두 닫기' 버튼을 못 찾음")
@@ -132,7 +146,44 @@ class MyAccessibilityService : AccessibilityService() {
         }, 1500)
     }
 
-    private fun findNodeByText(root: AccessibilityNodeInfo, text: String): AccessibilityNodeInfo? {
+    // [시스템 종료 기능]
+    private fun shutdownSystem() {
+        Toast.makeText(applicationContext, "시스템 종료를 시도합니다.", Toast.LENGTH_LONG).show()
+        performGlobalAction(GLOBAL_ACTION_POWER_DIALOG)
+
+        handler.postDelayed({
+            val rootNode = rootInActiveWindow
+            if (rootNode != null) {
+                val powerOffNode = findNodeByText(rootNode, "전원 끄기")
+                    ?: findNodeByText(rootNode, "종료")
+                    ?: findNodeByText(rootNode, "Power off")
+
+                if (powerOffNode != null) {
+                    Log.d("CarNavi", "✅ '전원 끄기' 버튼 찾음! 클릭!")
+                    powerOffNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+
+                    handler.postDelayed({
+                        val confirmRootNode = rootInActiveWindow
+                        val confirmNode = findNodeByText(confirmRootNode, "전원 끄기")
+                            ?: findNodeByText(confirmRootNode, "종료")
+                        confirmNode?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    }, 1000)
+
+                } else {
+                    Log.e("CarNavi", "❌ '전원 끄기' 버튼을 찾지 못했습니다.")
+                    Toast.makeText(applicationContext, "'전원 끄기' 버튼을 찾지 못했습니다.", Toast.LENGTH_SHORT).show()
+                    performGlobalAction(GLOBAL_ACTION_HOME) 
+                }
+            } else {
+                Log.e("CarNavi", "❌ 전원 메뉴 화면 정보를 가져올 수 없음")
+                performGlobalAction(GLOBAL_ACTION_HOME) 
+            }
+        }, 1500)
+    }
+
+
+    private fun findNodeByText(root: AccessibilityNodeInfo?, text: String): AccessibilityNodeInfo? {
+        if (root == null) return null
         val nodes = root.findAccessibilityNodeInfosByText(text)
         for (node in nodes) {
             var clickableNode: AccessibilityNodeInfo? = node
@@ -146,11 +197,4 @@ class MyAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {}
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == "START_SHUTDOWN_TIMER") {
-            startShutdownTimer()
-        }
-        return super.onStartCommand(intent, flags, startId)
-    }
 }

@@ -24,34 +24,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // SharedPreferences 초기화 (설정값 저장용)
         prefs = getSharedPreferences("CarNaviPrefs", Context.MODE_PRIVATE)
 
         statusText = findViewById(R.id.statusText)
         editDelayMinutes = findViewById(R.id.editDelayMinutes)
 
-        // 저장된 시간 불러와서 EditText에 표시
-        val savedMinutes = prefs.getInt("shutdown_delay_minutes", 1) // 기본값 1분
+        val savedMinutes = prefs.getInt("shutdown_delay_minutes", 1)
         editDelayMinutes.setText(savedMinutes.toString())
 
-        // 저장 버튼 리스너
+        // 버튼 리스너 설정
         findViewById<Button>(R.id.btnSaveDelay).setOnClickListener {
-            val minutesText = editDelayMinutes.text.toString()
-            if (minutesText.isNotEmpty()) {
-                val minutes = minutesText.toInt()
-                prefs.edit().putInt("shutdown_delay_minutes", minutes).apply()
-                Toast.makeText(this, "자동 종료 시간이 ${minutes}분으로 저장되었습니다.", Toast.LENGTH_SHORT).show()
-                updateStatus() // 상태 텍스트 업데이트
-            } else {
-                Toast.makeText(this, "시간을 입력해주세요.", Toast.LENGTH_SHORT).show()
-            }
+            saveShutdownDelay()
         }
-
-        // 나머지 버튼들 설정
         findViewById<Button>(R.id.btnAccessibility).setOnClickListener { openAccessibilitySettings() }
         findViewById<Button>(R.id.btnBattery).setOnClickListener { openBatterySettings() }
         findViewById<Button>(R.id.btnTestNavi).setOnClickListener { testLaunchNavi() }
-        findViewById<Button>(R.id.btnTestShutdown).setOnClickListener { testShutdownTimer() }
+        findViewById<Button>(R.id.btnTestShutdown).setOnClickListener { testKillAllApps() }
+        // 새로 추가된 시스템 종료 테스트 버튼
+        findViewById<Button>(R.id.btnTestSystemShutdown).setOnClickListener { testSystemShutdown() }
 
         updateStatus()
     }
@@ -59,6 +49,18 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateStatus()
+    }
+
+    private fun saveShutdownDelay() {
+        val minutesText = editDelayMinutes.text.toString()
+        if (minutesText.isNotEmpty()) {
+            val minutes = minutesText.toInt()
+            prefs.edit().putInt("shutdown_delay_minutes", minutes).apply()
+            Toast.makeText(this, "자동 종료 시간이 ${minutes}분으로 저장되었습니다.", Toast.LENGTH_SHORT).show()
+            updateStatus()
+        } else {
+            Toast.makeText(this, "시간을 입력해주세요.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun updateStatus() {
@@ -92,17 +94,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openBatterySettings() {
-        // 배터리 최적화 해제 화면으로 바로 이동 시도
         try {
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
             intent.data = Uri.parse("package:$packageName")
             startActivity(intent)
         } catch (e: Exception) {
-            // 실패 시 일반 앱 설정 화면으로 이동
             Toast.makeText(this, "배터리 최적화 메뉴를 직접 찾아주세요.", Toast.LENGTH_SHORT).show()
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-            intent.data = Uri.parse("package:$packageName")
-            startActivity(intent)
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            })
         }
     }
 
@@ -118,15 +118,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun testShutdownTimer() {
+    private fun testKillAllApps() {
         val minutes = prefs.getInt("shutdown_delay_minutes", 1)
         Toast.makeText(this, "테스트: ${minutes}분 후 모든 앱 종료 시작!", Toast.LENGTH_SHORT).show()
         val serviceIntent = Intent(this, MyAccessibilityService::class.java)
-        serviceIntent.action = "START_SHUTDOWN_TIMER"
-        try {
-            startService(serviceIntent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "서비스 시작 실패 (접근성 권한 확인)", Toast.LENGTH_LONG).show()
-        }
+        // 서비스에 직접 명령을 내리는 대신, 타이머 시작 액션을 보냄
+        serviceIntent.action = "START_SHUTDOWN_TIMER" 
+        startService(serviceIntent)
+    }
+
+    private fun testSystemShutdown() {
+        Toast.makeText(this, "테스트: 시스템 종료 시작!", Toast.LENGTH_SHORT).show()
+        val serviceIntent = Intent(this, MyAccessibilityService::class.java)
+        // 서비스에 시스템 종료를 직접 명령하는 새 액션
+        serviceIntent.action = "ACTION_SYSTEM_SHUTDOWN_NOW"
+        startService(serviceIntent)
     }
 }
