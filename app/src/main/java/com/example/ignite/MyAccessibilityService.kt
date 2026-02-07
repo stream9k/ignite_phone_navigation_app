@@ -71,7 +71,7 @@ class MyAccessibilityService : AccessibilityService() {
 
     override fun onCreate() {
         super.onCreate()
-        prefs = getSharedPreferences("CarNaviPrefs", Context.MODE_PRIVATE)
+        prefs = getSharedPreferences("CarNaviPrefs", MODE_PRIVATE)
         createNotificationChannel()
         registerPowerReceiver()
     }
