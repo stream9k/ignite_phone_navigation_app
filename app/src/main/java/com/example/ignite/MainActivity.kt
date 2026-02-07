@@ -2,6 +2,7 @@ package com.example.ignite
 
 import android.Manifest
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.app.AlertDialog
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -84,7 +85,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnRequestNotification).setOnClickListener { requestNotificationPermission() }
         findViewById<Button>(R.id.btnFullScreenIntent).setOnClickListener { openFullScreenIntentSettings() }
         findViewById<Button>(R.id.btnDrawOverlay).setOnClickListener { openDrawOverlaySettings() }
+        
+        // 접근성 설정 버튼
         findViewById<Button>(R.id.btnAccessibility).setOnClickListener { openAccessibilitySettings() }
+        
+        // 제한된 설정 허용 버튼 (앱 정보 열기)
+        findViewById<Button>(R.id.btnRestrictedSettings).setOnClickListener { openAppInfoSettings() }
+        
         findViewById<Button>(R.id.btnBattery).setOnClickListener { openBatterySettings() }
         findViewById<Button>(R.id.btnTestNavi).setOnClickListener { testLaunchNavi() }
         findViewById<Button>(R.id.btnTestShutdown).setOnClickListener { testKillAllApps() }
@@ -190,6 +197,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun openAccessibilitySettings() {
         startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
+    // 제한된 설정 허용을 위해 앱 정보 화면으로 이동
+    private fun openAppInfoSettings() {
+        try {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+            Toast.makeText(this, "우측 상단 메뉴 [⋮] -> [제한된 설정 허용]을 눌러주세요.", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "설정 화면 이동 실패", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openBatterySettings() {

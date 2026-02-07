@@ -112,11 +112,30 @@
             android:layout_height="wrap_content"
             android:text="3. 다른 앱 위에 표시 허용" />
 
-        <Button
-            android:id="@+id/btnAccessibility"
+        <!-- 접근성 관련 버튼들을 가로로 배치 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="4. 접근성 설정 열기" />
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnAccessibility"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="4. 접근성 설정"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnRestrictedSettings"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="4-1. 제한된 설정 허용"
+                android:textSize="12sp"
+                android:layout_marginStart="4dp"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/btnBattery"
