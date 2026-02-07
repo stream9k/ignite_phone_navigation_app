@@ -1,105 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
-
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:background="#F0F0F0"
-        android:padding="12dp"
-        android:text="상태 로딩 중..."
-        android:textSize="14sp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="자동 종료 시간 설정 (분 단위)"
-        android:textStyle="bold"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <EditText
-            android:id="@+id/editDelayMinutes"
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="예: 1 (1분)"
-            android:inputType="number" />
+            android:layout_marginBottom="16dp"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:text="상태 로딩 중..."
+            android:textSize="14sp" />
 
-        <Button
-            android:id="@+id/btnSaveDelay"
+        <Switch
+            android:id="@+id/switchMasterToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="자동 실행 및 종료 기능 사용"
+            android:textSize="16sp"
+            android:checked="true"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 앱 자동 종료 설정 -->
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="저장" />
+            android:text="앱 자동 종료 대기 시간 (초 단위)"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <EditText
+                android:id="@+id/editDelaySeconds"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="기본값: 60 (초)"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/btnSaveAppDelay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="저장" />
+        </LinearLayout>
+
+        <!-- 시스템 자동 종료 설정 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="휴대폰 전원 끄기 대기 시간 (분 단위)"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/editSystemDelayMinutes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="기본값: 90 (분)"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/btnSaveSystemDelay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="저장" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="필수 권한 설정 (순서대로 진행)"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <Button
+            android:id="@+id/btnRequestNotification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. 알림 권한 요청" />
+
+        <Button
+            android:id="@+id/btnFullScreenIntent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2. 전체 화면 알림 설정" />
+
+        <Button
+            android:id="@+id/btnDrawOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="3. 다른 앱 위에 표시 허용" />
+
+        <Button
+            android:id="@+id/btnAccessibility"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="4. 접근성 설정 열기" />
+
+        <Button
+            android:id="@+id/btnBattery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="5. 배터리 최적화 해제" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="\n수동 테스트"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="4dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnTestNavi"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tmap"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnTestShutdown"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="앱 종료"
+                android:textSize="12sp"
+                android:layout_marginEnd="4dp"/>
+
+            <Button
+                android:id="@+id/btnTestSystemShutdown"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="시스템 종료"
+                android:textSize="12sp"
+                android:backgroundTint="#C62828" />
+
+        </LinearLayout>
+
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnAccessibility"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="1. 접근성 설정 열기" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="직접 설정: 설정→접근성→설치된 서비스→ignite→사용 중으로 변경"
-        android:textSize="12sp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:layout_marginBottom="12dp"/>
-
-
-    <Button
-        android:id="@+id/btnBattery"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="2. 배터리 최적화 해제" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="직접 설정: 설정→검색→'배터리 사용량 최적화'→전체 앱→ignite 해제"
-        android:textSize="12sp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:layout_marginBottom="16dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="수동 테스트"
-        android:textStyle="bold"
-        android:layout_gravity="center_horizontal"/>
-
-    <Button
-        android:id="@+id/btnTestNavi"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="테스트: Tmap 실행"
-        android:layout_marginTop="8dp"/>
-
-    <Button
-        android:id="@+id/btnTestShutdown"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="테스트: 설정 시간 후 모든 앱 종료" />
-
-    <Button
-        android:id="@+id/btnTestSystemShutdown"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="테스트: 시스템 종료 (90분 기능)"
-        android:backgroundTint="#C62828" />
-
-</LinearLayout>
+</ScrollView>

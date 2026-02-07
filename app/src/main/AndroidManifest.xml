@@ -6,15 +6,24 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- 배터리 최적화 무시 권한 (앱이 안 죽게 하려면 필요할 수 있음) -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- [추가] 다른 앱 정보 조회를 위한 선언 (안드로이드 11 이상 필수) -->
+    <queries>
+        <package android:name="com.skt.tmap.ku" />
+    </queries>
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Ignite" >
+        android:theme="@style/Theme.Ignite"
+        android:launchMode="singleTask">
 
         <activity
             android:name=".MainActivity"
@@ -25,7 +34,13 @@
             </intent-filter>
         </activity>
 
-        <!-- 전원 감지 리시버 등록 -->
+        <activity
+            android:name=".LaunchTrampolineActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="true"
+            android:taskAffinity=""
+            android:excludeFromRecents="true" />
+
         <receiver android:name=".PowerConnectionReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
@@ -34,7 +49,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- 접근성 서비스 등록 (네비 종료용) -->
         <service
             android:name=".MyAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
