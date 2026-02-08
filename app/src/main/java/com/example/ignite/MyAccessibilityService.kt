@@ -1,6 +1,7 @@
 package com.example.ignite
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.GestureDescription
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -8,9 +9,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
+import android.graphics.Path
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -44,12 +47,10 @@ class MyAccessibilityService : AccessibilityService() {
                         cancelShutdown()
                         
                         if (isMasterEnabled) {
-                            // 비행기 모드가 켜져있다면 끄기
                             if (isAirplaneModeOn()) {
                                 Log.d("CarNavi", "비행기 모드 해제 시도")
                                 toggleAirplaneMode()
-                                // 비행기 모드 해제 후 내비 실행을 위해 약간 지연
-                                handler.postDelayed({ launchTargetApps() }, 3000)
+                                handler.postDelayed({ launchTargetApps() }, 4000) // 딜레이 약간 증가
                             } else {
                                 launchTargetApps()
                             }
@@ -104,7 +105,6 @@ class MyAccessibilityService : AccessibilityService() {
         }
     }
 
-    // MainActivity로부터 명령을 받아서 처리하는 부분
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             "ACTION_LAUNCH_TMAP_MANUALLY" -> launchTargetApps()
@@ -119,28 +119,19 @@ class MyAccessibilityService : AccessibilityService() {
         Log.d("CarNavi", "✅ 앱 자동 실행 시도")
         
         val jsonString = prefs.getString("target_app_list", "[]")
-        val appList = try {
-            JSONArray(jsonString)
-        } catch (e: Exception) {
-            JSONArray()
-        }
+        val appList = try { JSONArray(jsonString) } catch (e: Exception) { JSONArray() }
         
         if (appList.length() == 0) {
-            // 리스트가 비어있으면 호환성을 위해 기존 키 확인 (혹시 모르니)
             val legacyPackage = prefs.getString("target_navi_package", "com.skt.tmap.ku")
             launchApp(legacyPackage ?: "com.skt.tmap.ku")
             return
         }
 
-        // 순차 실행
         for (i in 0 until appList.length()) {
             val item = appList.getJSONObject(i)
             val pkgName = item.optString("package")
             if (pkgName.isNotEmpty()) {
-                // 2초 간격으로 실행
-                handler.postDelayed({
-                    launchApp(pkgName)
-                }, (i * 2000).toLong())
+                handler.postDelayed({ launchApp(pkgName) }, (i * 2000).toLong())
             }
         }
     }
@@ -214,7 +205,6 @@ class MyAccessibilityService : AccessibilityService() {
             val closeTexts = listOf("모두 닫기", "Close all", "모두 지우기", "Clear all")
             var closeAllNode: AccessibilityNodeInfo? = null
 
-            // 활성 창 우선 탐색, 실패 시 모든 창 탐색
             val rootToSearch = rootInActiveWindow ?: windows.lastOrNull()?.root
             
             if (rootToSearch != null) {
@@ -231,7 +221,7 @@ class MyAccessibilityService : AccessibilityService() {
                 Log.w("CarNavi", "모두 닫기 버튼을 찾지 못했습니다.")
                 performGlobalAction(GLOBAL_ACTION_HOME)
             }
-        }, 2000) // 딜레이를 2초로 증가
+        }, 2000)
     }
 
     private fun shutdownSystem() {
@@ -254,23 +244,97 @@ class MyAccessibilityService : AccessibilityService() {
     
     private fun toggleAirplaneMode() {
         performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
+        findAndClickAirplaneButton(3)
+    }
+    
+    private fun findAndClickAirplaneButton(retries: Int) {
         handler.postDelayed({
+            if (retries <= 0) {
+                Toast.makeText(this, "비행기 모드 버튼을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                return@postDelayed
+            }
+
+            val airplaneTexts = listOf("비행기", "Airplane", "Flight", "비행기 탑승 모드")
+            var airplaneNode: AccessibilityNodeInfo? = null
             val rootNode = rootInActiveWindow
-            val airplaneNode = findNodeByText(rootNode, "비행기") 
-                ?: findNodeByText(rootNode, "Airplane")
-                ?: findNodeByText(rootNode, "Flight")
+            
+            if (rootNode != null) {
+                for (text in airplaneTexts) {
+                    airplaneNode = findNodeByText(rootNode, text)
+                    if (airplaneNode != null) break
+                }
+            }
                 
             if (airplaneNode != null) {
                 airplaneNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                 Toast.makeText(this, "비행기 모드 토글됨", Toast.LENGTH_SHORT).show()
                 handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_BACK) }, 1000)
             } else {
-                Toast.makeText(this, "비행기 모드 버튼을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
-                performGlobalAction(GLOBAL_ACTION_BACK)
+                // 스크롤 시도: 논리적 스크롤 -> 실패 시 제스처
+                if (performScrollAction(rootNode)) {
+                    // 스크롤 성공 시 조금 더 기다린 후 재귀
+                    findAndClickAirplaneButton(retries - 1)
+                } else {
+                    // 스크롤 실패 시 제스처 시도
+                    swipeQuickSettings()
+                    findAndClickAirplaneButton(retries - 1)
+                }
             }
         }, 2000)
     }
-    
+
+    private fun performScrollAction(root: AccessibilityNodeInfo?): Boolean {
+        if (root == null) return false
+        
+        // 1. ACTION_SCROLL_FORWARD를 지원하는 모든 노드를 찾음
+        val scrollableNodes = ArrayList<AccessibilityNodeInfo>()
+        findScrollableActionNodes(root, scrollableNodes)
+        
+        if (scrollableNodes.isNotEmpty()) {
+            // 발견된 노드 중 하나라도 스크롤 성공하면 true
+            for (node in scrollableNodes) {
+                if (node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)) {
+                    Log.d("CarNavi", "논리적 스크롤 성공: ${node.className}")
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    private fun findScrollableActionNodes(node: AccessibilityNodeInfo?, list: MutableList<AccessibilityNodeInfo>) {
+        if (node == null) return
+        
+        if (node.actionList.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD)) {
+            list.add(node)
+        }
+        
+        for (i in 0 until node.childCount) {
+            findScrollableActionNodes(node.getChild(i), list)
+        }
+    }
+
+    private fun swipeQuickSettings() {
+        val metrics = DisplayMetrics()
+        val windowManager = getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
+        windowManager.defaultDisplay.getRealMetrics(metrics)
+        
+        val width = metrics.widthPixels
+        val height = metrics.heightPixels
+
+        val path = Path()
+        // 중앙 높이(50%)에서 가로 스와이프
+        path.moveTo((width * 0.8f), (height * 0.5f))
+        path.lineTo((width * 0.1f), (height * 0.5f))
+
+        val gesture = GestureDescription.Builder()
+            .addStroke(GestureDescription.StrokeDescription(path, 0, 500))
+            .build()
+
+        dispatchGesture(gesture, null, null)
+    }
+
     private fun isAirplaneModeOn(): Boolean {
         return Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
     }
