@@ -204,28 +204,32 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     private fun killAllApps() {
-        performGlobalAction(GLOBAL_ACTION_RECENTS)
+        // 홈으로 먼저 이동하여 안정성 확보
+        performGlobalAction(GLOBAL_ACTION_HOME)
         handler.postDelayed({
-            val closeTexts = listOf("모두 닫기", "Close all", "모두 지우기", "Clear all")
-            var closeAllNode: AccessibilityNodeInfo? = null
+            performGlobalAction(GLOBAL_ACTION_RECENTS)
+            handler.postDelayed({
+                val closeTexts = listOf("모두 닫기", "Close all", "모두 지우기", "Clear all")
+                var closeAllNode: AccessibilityNodeInfo? = null
 
-            val rootToSearch = rootInActiveWindow ?: windows.lastOrNull()?.root
-            
-            if (rootToSearch != null) {
-                for (text in closeTexts) {
-                    closeAllNode = findNodeByText(rootToSearch, text)
-                    if (closeAllNode != null) break
+                val rootToSearch = rootInActiveWindow ?: windows.lastOrNull()?.root
+                
+                if (rootToSearch != null) {
+                    for (text in closeTexts) {
+                        closeAllNode = findNodeByText(rootToSearch, text)
+                        if (closeAllNode != null) break
+                    }
                 }
-            }
 
-            if (closeAllNode != null) {
-                closeAllNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 500)
-            } else {
-                Log.w("CarNavi", "모두 닫기 버튼을 찾지 못했습니다.")
-                performGlobalAction(GLOBAL_ACTION_HOME)
-            }
-        }, 2000)
+                if (closeAllNode != null) {
+                    closeAllNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 500)
+                } else {
+                    Log.w("CarNavi", "모두 닫기 버튼을 찾지 못했습니다.")
+                    performGlobalAction(GLOBAL_ACTION_HOME)
+                }
+            }, 1000) // 홈 이동 후 Recents 화면 로딩 시간
+        }, 500) // 홈 이동 시간
     }
 
     private fun shutdownSystem() {

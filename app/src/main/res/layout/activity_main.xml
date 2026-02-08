@@ -31,12 +31,12 @@
             android:checked="true"
             android:layout_marginBottom="16dp" />
 
-        <!-- 필수 권한 설정 블럭 (위로 이동) -->
+        <!-- 필수 권한 설정 블럭 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#FAFAFA"
+            android:background="#F0F0F0"
             android:padding="12dp"
             android:layout_marginBottom="16dp">
 
@@ -108,12 +108,12 @@
                 android:gravity="center"/>
         </LinearLayout>
 
-        <!-- 설정 블럭 (아래로 이동) -->
+        <!-- 설정 블럭 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#FAFAFA"
+            android:background="#F0F0F0"
             android:padding="12dp"
             android:layout_marginBottom="16dp">
 
