@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Ignite</string>
     <string name="status_loading">상태 로딩 중...</string>
-    <string name="toggle_master">자동 실행 및 종료 기능 사용</string>
+    <string name="toggle_master">Ignite 앱 기능 전체 사용</string>
     <string name="title_app_shutdown_delay">앱 자동 종료 대기 시간 (초 단위)</string>
     <string name="hint_app_delay">기본값: 60 (초)</string>
     <string name="btn_save">저장</string>
