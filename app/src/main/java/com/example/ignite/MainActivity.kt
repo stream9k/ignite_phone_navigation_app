@@ -199,14 +199,10 @@ class MainActivity : AppCompatActivity() {
             
             btnMinus.setOnClickListener {
                 val list = getAppList()
-                // minSdk가 28이므로 KITKAT(19) 버전 체크 불필요
                 list.remove(index)
                 saveAppList(list)
             }
             row.addView(btnMinus)
-        } else {
-            // 첫 번째 항목이라도 레이아웃 균형을 위해 투명한 뷰를 넣을 수도 있지만,
-            // 그림상 첫 줄은 꽉 차 있으므로 넣지 않음.
         }
         
         // 2. [ 앱 선택 ] 버튼 (가운데, weight 1)
@@ -372,8 +368,8 @@ class MainActivity : AppCompatActivity() {
         try {
             val pInfo = packageManager.getPackageInfo(packageName, 0)
             versionName = pInfo.versionName ?: "Unknown" // Null safety fix
-        } catch (e: PackageManager.NameNotFoundException) {
-            // 사용되지 않는 e를 _로 변경
+        } catch (_: PackageManager.NameNotFoundException) {
+            // e is not used, so it's replaced with _
         }
 
         val statusMsg = """

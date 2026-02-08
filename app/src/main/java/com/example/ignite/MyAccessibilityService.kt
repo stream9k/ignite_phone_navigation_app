@@ -10,14 +10,18 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.graphics.Path
+import android.graphics.Rect
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import org.json.JSONArray
 
 class MyAccessibilityService : AccessibilityService() {
@@ -119,7 +123,7 @@ class MyAccessibilityService : AccessibilityService() {
         Log.d("CarNavi", "✅ 앱 자동 실행 시도")
         
         val jsonString = prefs.getString("target_app_list", "[]")
-        val appList = try { JSONArray(jsonString) } catch (e: Exception) { JSONArray() }
+        val appList = try { JSONArray(jsonString) } catch (_: Exception) { JSONArray() }
         
         if (appList.length() == 0) {
             val legacyPackage = prefs.getString("target_navi_package", "com.skt.tmap.ku")
@@ -311,16 +315,20 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     private fun swipeQuickSettings() {
-        val metrics = DisplayMetrics()
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
-        windowManager.defaultDisplay.getRealMetrics(metrics)
-        
-        val width = metrics.widthPixels
-        val height = metrics.heightPixels
+        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val bounds: Rect
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            bounds = windowManager.currentWindowMetrics.bounds
+        } else {
+            val metrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(metrics)
+            bounds = Rect(0, 0, metrics.widthPixels, metrics.heightPixels)
+        }
 
         val path = Path()
-        path.moveTo((width * 0.8f), (height * 0.5f))
-        path.lineTo((width * 0.1f), (height * 0.5f))
+        path.moveTo((bounds.width() * 0.8f), (bounds.height() * 0.5f))
+        path.lineTo((bounds.width() * 0.1f), (bounds.height() * 0.5f))
 
         val gesture = GestureDescription.Builder()
             .addStroke(GestureDescription.StrokeDescription(path, 0, 500))
