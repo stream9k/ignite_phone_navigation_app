@@ -368,9 +368,17 @@ class MainActivity : AppCompatActivity() {
         val accessibilityEnabled = isAccessibilityServiceEnabled()
         val isMasterEnabled = prefs.getBoolean("is_master_enabled", true)
         val airplaneModeOn = isAirplaneModeOn()
+        
+        var versionName = "Unknown"
+        try {
+            val pInfo = packageManager.getPackageInfo(packageName, 0)
+            versionName = pInfo.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        }
 
         val statusMsg = """
-            [앱 상태]
+            [앱 상태] V$versionName
             - 전체 기능: ${if (isMasterEnabled) "ON" else "OFF"}
             - 알림: ${if (notificationEnabled) "✅" else "❌ (필수)"}
             - 다른 앱 위에 표시: ${if (overlayEnabled) "✅" else "❌ (필수)"}
@@ -378,10 +386,6 @@ class MainActivity : AppCompatActivity() {
             - 비행기 모드: ${if (airplaneModeOn) "ON" else "OFF"}
         """.trimIndent()
         statusText.text = statusMsg
-    }
-    
-    private fun isAirplaneModeOn(): Boolean {
-        return Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
     }
 
     private fun hasNotificationPermission(): Boolean {
@@ -466,5 +470,9 @@ class MainActivity : AppCompatActivity() {
     
     private fun testAirplaneToggle() {
         startService(Intent(this, MyAccessibilityService::class.java).apply { action = "ACTION_TOGGLE_AIRPLANE_MODE_MANUALLY" })
+    }
+    
+    private fun isAirplaneModeOn(): Boolean {
+        return Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) != 0
     }
 }
