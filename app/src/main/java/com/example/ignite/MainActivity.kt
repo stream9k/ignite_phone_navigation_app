@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         val jsonString = prefs.getString("target_app_list", "[]")
         return try {
             JSONArray(jsonString)
-        } catch (e: Exception) {
+        } catch (_: Exception) { // 파라미터 e는 사용되지 않으므로 _로 변경
             JSONArray()
         }
     }
@@ -199,9 +199,8 @@ class MainActivity : AppCompatActivity() {
             
             btnMinus.setOnClickListener {
                 val list = getAppList()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    list.remove(index)
-                }
+                // minSdk가 28이므로 KITKAT(19) 버전 체크 불필요
+                list.remove(index)
                 saveAppList(list)
             }
             row.addView(btnMinus)
@@ -372,9 +371,9 @@ class MainActivity : AppCompatActivity() {
         var versionName = "Unknown"
         try {
             val pInfo = packageManager.getPackageInfo(packageName, 0)
-            versionName = pInfo.versionName
+            versionName = pInfo.versionName ?: "Unknown" // Null safety fix
         } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
+            // 사용되지 않는 e를 _로 변경
         }
 
         val statusMsg = """
@@ -453,6 +452,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openBatterySettings() {
+        // Play Store 정책 경고는 개인용 앱이므로 기능을 유지합니다.
         startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, "package:$packageName".toUri()))
     }
     

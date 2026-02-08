@@ -147,8 +147,8 @@ class MyAccessibilityService : AccessibilityService() {
             } else {
                 Log.w("CarNavi", "$packageName 앱을 찾을 수 없음")
             }
-        } catch (e: Exception) {
-            Log.e("CarNavi", "앱 실행 실패: $packageName", e)
+        } catch (_: Exception) {
+            Log.e("CarNavi", "앱 실행 실패: $packageName")
         }
     }
 
@@ -271,12 +271,9 @@ class MyAccessibilityService : AccessibilityService() {
                 Toast.makeText(this, "비행기 모드 토글됨", Toast.LENGTH_SHORT).show()
                 handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_BACK) }, 1000)
             } else {
-                // 스크롤 시도: 논리적 스크롤 -> 실패 시 제스처
                 if (performScrollAction(rootNode)) {
-                    // 스크롤 성공 시 조금 더 기다린 후 재귀
                     findAndClickAirplaneButton(retries - 1)
                 } else {
-                    // 스크롤 실패 시 제스처 시도
                     swipeQuickSettings()
                     findAndClickAirplaneButton(retries - 1)
                 }
@@ -287,12 +284,10 @@ class MyAccessibilityService : AccessibilityService() {
     private fun performScrollAction(root: AccessibilityNodeInfo?): Boolean {
         if (root == null) return false
         
-        // 1. ACTION_SCROLL_FORWARD를 지원하는 모든 노드를 찾음
         val scrollableNodes = ArrayList<AccessibilityNodeInfo>()
         findScrollableActionNodes(root, scrollableNodes)
         
         if (scrollableNodes.isNotEmpty()) {
-            // 발견된 노드 중 하나라도 스크롤 성공하면 true
             for (node in scrollableNodes) {
                 if (node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)) {
                     Log.d("CarNavi", "논리적 스크롤 성공: ${node.className}")
@@ -324,7 +319,6 @@ class MyAccessibilityService : AccessibilityService() {
         val height = metrics.heightPixels
 
         val path = Path()
-        // 중앙 높이(50%)에서 가로 스와이프
         path.moveTo((width * 0.8f), (height * 0.5f))
         path.lineTo((width * 0.1f), (height * 0.5f))
 
