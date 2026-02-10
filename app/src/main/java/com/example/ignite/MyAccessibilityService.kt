@@ -52,7 +52,7 @@ class MyAccessibilityService : AccessibilityService() {
                         Log.d("CarNavi", "✅ 전원 연결됨! (Receiver)")
                         cancelShutdown()
                         
-                        // 화면만 켜고 잠금 화면 유지 (비밀번호 입력창이 뜨면 퀵패널 접근이 어려울 수 있음)
+                        // 화면만 켜고 잠금 화면 유지
                         wakeDevice()
 
                         if (isMasterEnabled) {
@@ -270,7 +270,13 @@ class MyAccessibilityService : AccessibilityService() {
         
         // 퀵 설정 패널 열기
         performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
-        findAndClickAirplaneButton(4) // 재시도 횟수 약간 증가
+        
+        // [수정됨] 유저 요청: 잠금화면에서 3번 쓸어내려야 버튼이 보임
+        handler.postDelayed({ swipeTopToBottom() }, 1000)
+        handler.postDelayed({ swipeTopToBottom() }, 2000)
+        
+        // 3초 후 버튼 찾기 시작 (재시도 횟수 유지)
+        handler.postDelayed({ findAndClickAirplaneButton(4) }, 3000)
     }
     
     private fun findAndClickAirplaneButton(retries: Int) {
@@ -296,10 +302,11 @@ class MyAccessibilityService : AccessibilityService() {
             if (airplaneNode != null) {
                 airplaneNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                 Toast.makeText(this, "비행기 모드 토글됨", Toast.LENGTH_SHORT).show()
-                // 비행기 모드 실행 후 홈 화면으로 이동
-                handler.postDelayed({ 
-                    performGlobalAction(GLOBAL_ACTION_HOME) 
-                }, 1000)
+                
+                // [수정됨] 3번 연속 홈 화면 액션 수행 (유저 요청)
+                handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 1000)
+                handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 2000)
+                handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 3000)
             } else {
                 Log.d("CarNavi", "비행기 모드 버튼 미발견. 재시도: $retries")
                 // 1. Accessibility Scroll 시도 (보통 패널 내부 스크롤)
@@ -316,7 +323,7 @@ class MyAccessibilityService : AccessibilityService() {
                     findAndClickAirplaneButton(retries - 1)
                 }
             }
-        }, 1500) // UI 반응 대기 시간
+        }, 1000) // 1초 간격으로 확인
     }
 
     private fun performScrollAction(root: AccessibilityNodeInfo?): Boolean {

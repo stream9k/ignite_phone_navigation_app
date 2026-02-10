@@ -10,8 +10,8 @@ android {
         applicationId = "com.example.ignite"
         minSdk = 28
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.3.4"
+        versionCode = 9
+        versionName = "1.3.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,4 +44,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+base {
+    archivesName.set("Ignite-${android.defaultConfig.versionName}")
 }
