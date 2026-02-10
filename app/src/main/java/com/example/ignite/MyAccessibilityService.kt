@@ -2,6 +2,7 @@ package com.example.ignite
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
+import android.app.KeyguardManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -14,6 +15,7 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
@@ -50,11 +52,15 @@ class MyAccessibilityService : AccessibilityService() {
                         Log.d("CarNavi", "✅ 전원 연결됨! (Receiver)")
                         cancelShutdown()
                         
+                        // 화면만 켜고 잠금 화면 유지 (비밀번호 입력창이 뜨면 퀵패널 접근이 어려울 수 있음)
+                        wakeDevice()
+
                         if (isMasterEnabled) {
                             if (isAirplaneModeOn()) {
                                 Log.d("CarNavi", "비행기 모드 해제 시도")
-                                toggleAirplaneMode()
-                                handler.postDelayed({ launchTargetApps() }, 4000) // 딜레이 약간 증가
+                                // 화면이 켜지고 시스템 UI가 준비될 시간을 넉넉히 줌
+                                handler.postDelayed({ toggleAirplaneMode() }, 2000)
+                                handler.postDelayed({ launchTargetApps() }, 8000) // 비행기 모드 처리 후 실행
                             } else {
                                 launchTargetApps()
                             }
@@ -122,6 +128,13 @@ class MyAccessibilityService : AccessibilityService() {
     private fun launchTargetApps() {
         Log.d("CarNavi", "✅ 앱 자동 실행 시도")
         
+        // 잠금 상태일 경우 안내
+        val km = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        if (km.isKeyguardLocked) {
+             Log.w("CarNavi", "잠금 상태입니다. 앱이 백그라운드에서 실행될 수 있습니다.")
+             Toast.makeText(this, "잠금 상태에서는 앱이 화면에 바로 뜨지 않을 수 있습니다.", Toast.LENGTH_SHORT).show()
+        }
+
         val jsonString = prefs.getString("target_app_list", "[]")
         val appList = try { JSONArray(jsonString) } catch (_: Exception) { JSONArray() }
         
@@ -146,6 +159,8 @@ class MyAccessibilityService : AccessibilityService() {
             val intent = packageManager.getLaunchIntentForPackage(packageName)
             if (intent != null) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                // 잠금 화면 위로 보여주기 위한 플래그 추가 (일부 앱에서 지원할 경우 도움됨)
+                intent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                 startActivity(intent)
                 Toast.makeText(this, "$packageName 실행", Toast.LENGTH_SHORT).show()
             } else {
@@ -204,7 +219,6 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     private fun killAllApps() {
-        // 홈으로 먼저 이동하여 안정성 확보
         performGlobalAction(GLOBAL_ACTION_HOME)
         handler.postDelayed({
             performGlobalAction(GLOBAL_ACTION_RECENTS)
@@ -228,8 +242,8 @@ class MyAccessibilityService : AccessibilityService() {
                     Log.w("CarNavi", "모두 닫기 버튼을 찾지 못했습니다.")
                     performGlobalAction(GLOBAL_ACTION_HOME)
                 }
-            }, 1000) // 홈 이동 후 Recents 화면 로딩 시간
-        }, 500) // 홈 이동 시간
+            }, 1000)
+        }, 500)
     }
 
     private fun shutdownSystem() {
@@ -251,14 +265,19 @@ class MyAccessibilityService : AccessibilityService() {
     }
     
     private fun toggleAirplaneMode() {
+        // 화면이 꺼져있다면 다시 한번 깨움
+        wakeDevice()
+        
+        // 퀵 설정 패널 열기
         performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
-        findAndClickAirplaneButton(3)
+        findAndClickAirplaneButton(4) // 재시도 횟수 약간 증가
     }
     
     private fun findAndClickAirplaneButton(retries: Int) {
         handler.postDelayed({
             if (retries <= 0) {
                 Toast.makeText(this, "비행기 모드 버튼을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                // 실패 시 퀵패널 닫기 시도 (뒤로가기)
                 performGlobalAction(GLOBAL_ACTION_BACK)
                 return@postDelayed
             }
@@ -279,14 +298,22 @@ class MyAccessibilityService : AccessibilityService() {
                 Toast.makeText(this, "비행기 모드 토글됨", Toast.LENGTH_SHORT).show()
                 handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_BACK) }, 1000)
             } else {
+                Log.d("CarNavi", "비행기 모드 버튼 미발견. 재시도: $retries")
+                // 1. Accessibility Scroll 시도 (보통 패널 내부 스크롤)
                 if (performScrollAction(rootNode)) {
                     findAndClickAirplaneButton(retries - 1)
                 } else {
-                    swipeQuickSettings()
+                    // 2. 패널이 안 열렸거나 페이지가 다를 수 있음.
+                    // 첫 번째 실패라면 수직 스와이프(패널 열기 강화) 시도
+                    if (retries == 4) { 
+                         swipeTopToBottom() // 혹시 패널이 덜 열렸다면
+                    } else {
+                         swipeRightToLeft() // 옆 페이지로 이동
+                    }
                     findAndClickAirplaneButton(retries - 1)
                 }
             }
-        }, 2000)
+        }, 1500) // UI 반응 대기 시간
     }
 
     private fun performScrollAction(root: AccessibilityNodeInfo?): Boolean {
@@ -318,17 +345,10 @@ class MyAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun swipeQuickSettings() {
+    // 퀵 설정 패널 페이지 넘기기 (우 -> 좌)
+    private fun swipeRightToLeft() {
         val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val bounds: Rect
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            bounds = windowManager.currentWindowMetrics.bounds
-        } else {
-            val metrics = DisplayMetrics()
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getRealMetrics(metrics)
-            bounds = Rect(0, 0, metrics.widthPixels, metrics.heightPixels)
-        }
+        val bounds = getScreenBounds(windowManager)
 
         val path = Path()
         path.moveTo((bounds.width() * 0.8f), (bounds.height() * 0.5f))
@@ -339,6 +359,33 @@ class MyAccessibilityService : AccessibilityService() {
             .build()
 
         dispatchGesture(gesture, null, null)
+    }
+
+    // 상단바 내리기 (패널 열기 보조)
+    private fun swipeTopToBottom() {
+        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val bounds = getScreenBounds(windowManager)
+
+        val path = Path()
+        path.moveTo((bounds.width() * 0.5f), 0f)
+        path.lineTo((bounds.width() * 0.5f), (bounds.height() * 0.6f))
+
+        val gesture = GestureDescription.Builder()
+            .addStroke(GestureDescription.StrokeDescription(path, 0, 500))
+            .build()
+
+        dispatchGesture(gesture, null, null)
+    }
+    
+    private fun getScreenBounds(wm: WindowManager): Rect {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return wm.currentWindowMetrics.bounds
+        } else {
+            val metrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            wm.defaultDisplay.getRealMetrics(metrics)
+            return Rect(0, 0, metrics.widthPixels, metrics.heightPixels)
+        }
     }
 
     private fun isAirplaneModeOn(): Boolean {
@@ -357,6 +404,16 @@ class MyAccessibilityService : AccessibilityService() {
             }
         }
         return null
+    }
+
+    @Suppress("DEPRECATION")
+    private fun wakeDevice() {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wakeLock = pm.newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            "CarNavi:WakeUp"
+        )
+        wakeLock.acquire(3000)
     }
 
     override fun onInterrupt() {}
