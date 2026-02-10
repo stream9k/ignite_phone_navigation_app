@@ -296,7 +296,10 @@ class MyAccessibilityService : AccessibilityService() {
             if (airplaneNode != null) {
                 airplaneNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                 Toast.makeText(this, "비행기 모드 토글됨", Toast.LENGTH_SHORT).show()
-                handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_BACK) }, 1000)
+                // 비행기 모드 실행 후 홈 화면으로 이동
+                handler.postDelayed({ 
+                    performGlobalAction(GLOBAL_ACTION_HOME) 
+                }, 1000)
             } else {
                 Log.d("CarNavi", "비행기 모드 버튼 미발견. 재시도: $retries")
                 // 1. Accessibility Scroll 시도 (보통 패널 내부 스크롤)
