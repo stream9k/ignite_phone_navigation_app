@@ -13,8 +13,8 @@ android {
         applicationId = "com.example.ignite"
         minSdk = 28
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.3.10"
+        versionCode = 14
+        versionName = "1.3.12"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

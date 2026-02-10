@@ -219,31 +219,36 @@ class MyAccessibilityService : AccessibilityService() {
     }
 
     private fun killAllApps() {
-        performGlobalAction(GLOBAL_ACTION_HOME)
+        // [수정됨] 패턴 입력창이 떠있을 수 있으므로 뒤로가기로 닫기 먼저 시도
+        performGlobalAction(GLOBAL_ACTION_BACK)
+        
         handler.postDelayed({
-            performGlobalAction(GLOBAL_ACTION_RECENTS)
+            performGlobalAction(GLOBAL_ACTION_HOME)
             handler.postDelayed({
-                val closeTexts = listOf("모두 닫기", "Close all", "모두 지우기", "Clear all")
-                var closeAllNode: AccessibilityNodeInfo? = null
+                performGlobalAction(GLOBAL_ACTION_RECENTS)
+                handler.postDelayed({
+                    val closeTexts = listOf("모두 닫기", "Close all", "모두 지우기", "Clear all")
+                    var closeAllNode: AccessibilityNodeInfo? = null
 
-                val rootToSearch = rootInActiveWindow ?: windows.lastOrNull()?.root
-                
-                if (rootToSearch != null) {
-                    for (text in closeTexts) {
-                        closeAllNode = findNodeByText(rootToSearch, text)
-                        if (closeAllNode != null) break
+                    val rootToSearch = rootInActiveWindow ?: windows.lastOrNull()?.root
+                    
+                    if (rootToSearch != null) {
+                        for (text in closeTexts) {
+                            closeAllNode = findNodeByText(rootToSearch, text)
+                            if (closeAllNode != null) break
+                        }
                     }
-                }
 
-                if (closeAllNode != null) {
-                    closeAllNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 500)
-                } else {
-                    Log.w("CarNavi", "모두 닫기 버튼을 찾지 못했습니다.")
-                    performGlobalAction(GLOBAL_ACTION_HOME)
-                }
-            }, 1000)
-        }, 500)
+                    if (closeAllNode != null) {
+                        closeAllNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                        handler.postDelayed({ performGlobalAction(GLOBAL_ACTION_HOME) }, 500)
+                    } else {
+                        Log.w("CarNavi", "모두 닫기 버튼을 찾지 못했습니다.")
+                        performGlobalAction(GLOBAL_ACTION_HOME)
+                    }
+                }, 1000) // Recent 화면 로딩 대기
+            }, 1000) // Home 이동 후 대기 (안정성 확보를 위해 1초로 늘림)
+        }, 500) // Back 동작 후 대기
     }
 
     private fun shutdownSystem() {
@@ -268,15 +273,22 @@ class MyAccessibilityService : AccessibilityService() {
         // 화면이 꺼져있다면 다시 한번 깨움
         wakeDevice()
         
-        // 퀵 설정 패널 열기
-        performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
+        // 패턴 입력창이 떠있을 수 있으므로 뒤로가기로 닫기 시도
+        handler.postDelayed({ 
+            performGlobalAction(GLOBAL_ACTION_BACK) 
+        }, 500)
         
-        // [수정됨] 유저 요청: 잠금화면에서 3번 쓸어내려야 버튼이 보임
-        handler.postDelayed({ swipeTopToBottom() }, 1000)
-        handler.postDelayed({ swipeTopToBottom() }, 2000)
+        // 퀵 패널 열기 시도
+        handler.postDelayed({
+             performGlobalAction(GLOBAL_ACTION_QUICK_SETTINGS)
+        }, 1500)
         
-        // 3초 후 버튼 찾기 시작 (재시도 횟수 유지)
-        handler.postDelayed({ findAndClickAirplaneButton(4) }, 3000)
+        // 패널 확장을 위한 추가 스와이프 (기존 유지)
+        handler.postDelayed({ swipeTopToBottom() }, 2500)
+        handler.postDelayed({ swipeTopToBottom() }, 3500)
+        
+        // 버튼 찾기 시작
+        handler.postDelayed({ findAndClickAirplaneButton(4) }, 4500)
     }
     
     private fun findAndClickAirplaneButton(retries: Int) {
