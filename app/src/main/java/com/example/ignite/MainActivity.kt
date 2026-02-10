@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var radioAirplane: RadioButton
     private lateinit var radioNone: RadioButton
     private lateinit var llAppListContainer: LinearLayout
+    private lateinit var btnLockScreenSettings: Button
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         radioAirplane = findViewById(R.id.radioAirplane)
         radioNone = findViewById(R.id.radioNone)
         llAppListContainer = findViewById(R.id.llAppListContainer)
+        btnLockScreenSettings = findViewById(R.id.btnLockScreenSettings)
 
         val savedSeconds = prefs.getInt("app_shutdown_delay_seconds", 60)
         editDelaySeconds.setText(savedSeconds.toString())
@@ -242,6 +244,9 @@ class MainActivity : AppCompatActivity() {
         editSystemDelayMinutes.isEnabled = isEnabled
         btnSaveSystemDelay.isEnabled = isEnabled
         
+        // 비행기 모드일 때만 보안잠금 설정 버튼 활성화
+        btnLockScreenSettings.isEnabled = (actionType == "airplane")
+        
         if (!isEnabled) {
             editSystemDelayMinutes.setText("")
             editSystemDelayMinutes.hint = "-"
@@ -261,6 +266,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnAccessibility).setOnClickListener { openAccessibilitySettings() }
         findViewById<Button>(R.id.btnRestrictedSettings).setOnClickListener { openAppInfoSettings() }
         findViewById<Button>(R.id.btnBattery).setOnClickListener { openBatterySettings() }
+        btnLockScreenSettings.setOnClickListener { openLockScreenSettings() }
         
         findViewById<Button>(R.id.btnTestNavi).setOnClickListener { testLaunchNavi() }
         findViewById<Button>(R.id.btnTestShutdown).setOnClickListener { testKillAllApps() }
@@ -450,6 +456,18 @@ class MainActivity : AppCompatActivity() {
     private fun openBatterySettings() {
         // Play Store 정책 경고는 개인용 앱이므로 기능을 유지합니다.
         startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, "package:$packageName".toUri()))
+    }
+    
+    private fun openLockScreenSettings() {
+        try {
+            // 사용자 요청: 설정 -> 잠금화면 및 AOD -> 보안 잠금 상세설정
+            // 메인 설정 화면으로 이동하여 사용자가 직접 찾아들어가도록 유도 (삼성 One UI 구조 특성상 가장 정확함)
+            val intent = Intent(Settings.ACTION_SETTINGS)
+            startActivity(intent)
+            Toast.makeText(this, "잠금화면 및 AOD -> 보안 잠금 상세설정 -> 네트워크 및 보안 잠금 끄기", Toast.LENGTH_LONG).show()
+        } catch (_: Exception) {
+            Toast.makeText(this, "설정 화면을 열 수 없습니다.", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun testLaunchNavi() {

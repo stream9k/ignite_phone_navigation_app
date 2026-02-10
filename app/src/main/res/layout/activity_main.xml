@@ -223,7 +223,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
 
                 <TextView
                     android:id="@+id/txtActionDelayLabel"
@@ -258,6 +259,17 @@
                     android:textColor="#673AB7"
                     style="?android:attr/borderlessButtonStyle"/>
             </LinearLayout>
+
+            <Button
+                android:id="@+id/btnLockScreenSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="네트워크 보안잠금 해제 (비행기모드 사용시)"
+                android:backgroundTint="#673AB7"
+                android:enabled="false"
+                android:gravity="center"
+                android:visibility="visible"/>
+
         </LinearLayout>
 
         <TextView
