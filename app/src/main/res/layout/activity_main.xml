@@ -108,14 +108,14 @@
                 android:gravity="center"/>
         </LinearLayout>
 
-        <!-- 설정 블럭 -->
+        <!-- 블럭 1: 앱 설정 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="#F0F0F0"
             android:padding="12dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="8dp">
 
             <!-- 내비게이션 앱 선택 -->
             <TextView
@@ -137,7 +137,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="내비게이션 앱 종료 지연 시간 설정"
+                android:text="앱 종료 지연 시간 설정"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp"/>
 
@@ -145,8 +145,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:gravity="center_vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -180,129 +179,134 @@
                     android:textColor="#673AB7"
                     style="?android:attr/borderlessButtonStyle"/>
             </LinearLayout>
+        </LinearLayout>
 
-            <!-- 비행기 모드 설정 -->
+        <!-- 블럭 2: 비행기 모드 설정 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchAirplaneMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="비행기 모드 자동 실행"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="8dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:layout_marginTop="4dp">
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchAirplaneMode"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="비행기 모드 자동 실행"
-                    android:textStyle="bold"
-                    android:textSize="14sp" />
+                    android:text="동작 대기:"
+                    android:layout_marginEnd="8dp"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <EditText
+                    android:id="@+id/editAirplaneDelayMinutes"
+                    android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingStart="8dp">
+                    android:hint="5"
+                    android:inputType="number"
+                    android:gravity="center"
+                    android:textSize="14sp"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="동작 대기:"
-                        android:layout_marginEnd="8dp"/>
-
-                    <EditText
-                        android:id="@+id/editAirplaneDelayMinutes"
-                        android:layout_width="60dp"
-                        android:layout_height="wrap_content"
-                        android:hint="5"
-                        android:inputType="number"
-                        android:gravity="center"
-                        android:textSize="14sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="분 후"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginEnd="16dp"/>
-
-                    <Button
-                        android:id="@+id/btnSaveAirplaneDelay"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        android:text="저장"
-                        android:textColor="#673AB7"
-                        style="?android:attr/borderlessButtonStyle"/>
-                </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="분 후"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="16dp"/>
 
                 <Button
-                    android:id="@+id/btnLockScreenSettings"
-                    android:layout_width="match_parent"
+                    android:id="@+id/btnSaveAirplaneDelay"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="네트워크 보안잠금 해제 설정하기"
-                    android:backgroundTint="#673AB7"
-                    android:textSize="12sp"
-                    android:layout_marginBottom="8dp"
-                    android:gravity="center"/>
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:text="저장"
+                    android:textColor="#673AB7"
+                    style="?android:attr/borderlessButtonStyle"/>
             </LinearLayout>
 
-            <!-- 시스템 종료 설정 -->
+            <Button
+                android:id="@+id/btnLockScreenSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="네트워크 보안잠금 해제 설정하기"
+                android:backgroundTint="#673AB7"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <!-- 블럭 3: 시스템 종료 설정 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#F0F0F0"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchSystemShutdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="시스템 전원 자동 종료"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="8dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:layout_marginTop="4dp">
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchSystemShutdown"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="시스템 전원 자동 종료"
-                    android:textStyle="bold"
-                    android:textSize="14sp" />
+                    android:text="동작 대기:"
+                    android:layout_marginEnd="8dp"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <EditText
+                    android:id="@+id/editSystemShutdownDelayMinutes"
+                    android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingStart="8dp">
+                    android:hint="30"
+                    android:inputType="number"
+                    android:gravity="center"
+                    android:textSize="14sp"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="동작 대기:"
-                        android:layout_marginEnd="8dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="분 후"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="16dp"/>
 
-                    <EditText
-                        android:id="@+id/editSystemShutdownDelayMinutes"
-                        android:layout_width="60dp"
-                        android:layout_height="wrap_content"
-                        android:hint="30"
-                        android:inputType="number"
-                        android:gravity="center"
-                        android:textSize="14sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="분 후"
-                        android:layout_marginStart="4dp"
-                        android:layout_marginEnd="16dp"/>
-
-                    <Button
-                        android:id="@+id/btnSaveSystemShutdownDelay"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:minWidth="0dp"
-                        android:minHeight="0dp"
-                        android:text="저장"
-                        android:textColor="#673AB7"
-                        style="?android:attr/borderlessButtonStyle"/>
-                </LinearLayout>
+                <Button
+                    android:id="@+id/btnSaveSystemShutdownDelay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:text="저장"
+                    android:textColor="#673AB7"
+                    style="?android:attr/borderlessButtonStyle"/>
             </LinearLayout>
-
         </LinearLayout>
 
         <TextView
