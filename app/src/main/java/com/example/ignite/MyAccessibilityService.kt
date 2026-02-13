@@ -73,21 +73,16 @@ class MyAccessibilityService : AccessibilityService() {
                         
                         if (isMasterEnabled) {
                             val appDelaySeconds = prefs.getInt("app_shutdown_delay_seconds", 60)
-                            val systemDelayMinutes = prefs.getInt("system_shutdown_delay_minutes", 90)
-                            val actionType = prefs.getString("action_type", "shutdown")
-                            val actionText = when (actionType) {
-                                "airplane" -> "비행기 모드 실행"
-                                "none" -> "추가 동작 없음"
-                                else -> "시스템 종료"
-                            }
+                            val isAirplaneEnabled = prefs.getBoolean("is_airplane_mode_enabled", false)
+                            val airplaneMinutes = prefs.getInt("airplane_mode_delay_minutes", 5)
+                            val isSystemEnabled = prefs.getBoolean("is_system_shutdown_enabled", false)
+                            val systemMinutes = prefs.getInt("system_shutdown_delay_minutes", 30)
+
+                            val logMsg = StringBuilder("전원 해제됨: ${appDelaySeconds}초 후 앱 종료")
+                            if (isAirplaneEnabled) logMsg.append(", ${airplaneMinutes}분 후 비행기 모드")
+                            if (isSystemEnabled) logMsg.append(", ${systemMinutes}분 후 시스템 종료")
                             
-                            val toastMsg = if (actionType == "none") {
-                                "전원 해제: ${appDelaySeconds}초 후 앱 종료"
-                            } else {
-                                "전원 해제: ${appDelaySeconds}초 후 앱 종료, ${systemDelayMinutes}분 후 ${actionText}"
-                            }
-                            
-                            Toast.makeText(context, toastMsg, Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, logMsg.toString(), Toast.LENGTH_LONG).show()
                             startShutdownTimer()
                         } else {
                             Log.d("CarNavi", "마스터 스위치 OFF: 자동 종료 타이머 생략")
@@ -186,21 +181,30 @@ class MyAccessibilityService : AccessibilityService() {
         val appDelaySeconds = prefs.getInt("app_shutdown_delay_seconds", 60)
         val appDelayMillis = appDelaySeconds * 1000L
         
-        val systemDelayMinutes = prefs.getInt("system_shutdown_delay_minutes", 90)
-        val systemDelayMillis = systemDelayMinutes * 60 * 1000L
+        val isAirplaneEnabled = prefs.getBoolean("is_airplane_mode_enabled", false)
+        val airplaneMinutes = prefs.getInt("airplane_mode_delay_minutes", 5)
+        val airplaneDelayMillis = airplaneMinutes * 60 * 1000L
         
-        handler.removeCallbacks(shutdownRunnable)
+        val isSystemEnabled = prefs.getBoolean("is_system_shutdown_enabled", false)
+        val systemMinutes = prefs.getInt("system_shutdown_delay_minutes", 30)
+        val systemDelayMillis = systemMinutes * 60 * 1000L
+        
+        // 기존 타이머 모두 제거
+        cancelShutdown()
+        
+        // 1. 앱 종료 예약 (항상 실행)
         handler.postDelayed(shutdownRunnable, appDelayMillis)
         
-        val actionType = prefs.getString("action_type", "shutdown")
+        // 2. 비행기 모드 예약 (토글 ON 시)
+        if (isAirplaneEnabled) {
+            handler.postDelayed(airplaneModeRunnable, airplaneDelayMillis)
+            Log.d("CarNavi", "비행기 모드 예약됨: ${airplaneMinutes}분 후")
+        }
         
-        handler.removeCallbacks(systemShutdownRunnable)
-        handler.removeCallbacks(airplaneModeRunnable)
-        
-        when (actionType) {
-            "airplane" -> handler.postDelayed(airplaneModeRunnable, systemDelayMillis)
-            "shutdown" -> handler.postDelayed(systemShutdownRunnable, systemDelayMillis)
-            "none" -> Log.d("CarNavi", "최종 동작 없음 선택됨. 앱 종료 후 대기.")
+        // 3. 시스템 종료 예약 (토글 ON 시)
+        if (isSystemEnabled) {
+            handler.postDelayed(systemShutdownRunnable, systemDelayMillis)
+            Log.d("CarNavi", "시스템 종료 예약됨: ${systemMinutes}분 후")
         }
     }
 

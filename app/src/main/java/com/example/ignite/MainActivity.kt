@@ -40,14 +40,14 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var statusText: TextView
     private lateinit var editDelaySeconds: EditText
-    private lateinit var editSystemDelayMinutes: EditText
-    private lateinit var btnSaveSystemDelay: Button
+    private lateinit var editAirplaneDelayMinutes: EditText
+    private lateinit var btnSaveAirplaneDelay: Button
+    private lateinit var editSystemShutdownDelayMinutes: EditText
+    private lateinit var btnSaveSystemShutdownDelay: Button
     private lateinit var switchMasterToggle: SwitchCompat
+    private lateinit var switchAirplaneMode: SwitchCompat
+    private lateinit var switchSystemShutdown: SwitchCompat
     private lateinit var prefs: SharedPreferences
-    private lateinit var radioGroupAction: RadioGroup
-    private lateinit var radioShutdown: RadioButton
-    private lateinit var radioAirplane: RadioButton
-    private lateinit var radioNone: RadioButton
     private lateinit var llAppListContainer: LinearLayout
     private lateinit var btnLockScreenSettings: Button
 
@@ -69,25 +69,36 @@ class MainActivity : AppCompatActivity() {
         prefs = getSharedPreferences("CarNaviPrefs", Context.MODE_PRIVATE)
         statusText = findViewById(R.id.statusText)
         editDelaySeconds = findViewById(R.id.editDelaySeconds)
-        editSystemDelayMinutes = findViewById(R.id.editSystemDelayMinutes)
-        btnSaveSystemDelay = findViewById(R.id.btnSaveSystemDelay)
+        editAirplaneDelayMinutes = findViewById(R.id.editAirplaneDelayMinutes)
+        btnSaveAirplaneDelay = findViewById(R.id.btnSaveAirplaneDelay)
+        editSystemShutdownDelayMinutes = findViewById(R.id.editSystemShutdownDelayMinutes)
+        btnSaveSystemShutdownDelay = findViewById(R.id.btnSaveSystemShutdownDelay)
+        
         switchMasterToggle = findViewById(R.id.switchMasterToggle)
-        radioGroupAction = findViewById(R.id.radioGroupAction)
-        radioShutdown = findViewById(R.id.radioShutdown)
-        radioAirplane = findViewById(R.id.radioAirplane)
-        radioNone = findViewById(R.id.radioNone)
+        switchAirplaneMode = findViewById(R.id.switchAirplaneMode)
+        switchSystemShutdown = findViewById(R.id.switchSystemShutdown)
+        
         llAppListContainer = findViewById(R.id.llAppListContainer)
         btnLockScreenSettings = findViewById(R.id.btnLockScreenSettings)
 
+        // 설정 로드
         val savedSeconds = prefs.getInt("app_shutdown_delay_seconds", 60)
         editDelaySeconds.setText(savedSeconds.toString())
 
-        val savedSystemMinutes = prefs.getInt("system_shutdown_delay_minutes", 90)
-        editSystemDelayMinutes.setText(savedSystemMinutes.toString())
+        val isAirplaneEnabled = prefs.getBoolean("is_airplane_mode_enabled", false)
+        switchAirplaneMode.isChecked = isAirplaneEnabled
+        val airplaneMinutes = prefs.getInt("airplane_mode_delay_minutes", 5)
+        editAirplaneDelayMinutes.setText(airplaneMinutes.toString())
+
+        val isSystemEnabled = prefs.getBoolean("is_system_shutdown_enabled", false)
+        switchSystemShutdown.isChecked = isSystemEnabled
+        val systemMinutes = prefs.getInt("system_shutdown_delay_minutes", 30)
+        editSystemShutdownDelayMinutes.setText(systemMinutes.toString())
 
         val isMasterEnabled = prefs.getBoolean("is_master_enabled", true)
         switchMasterToggle.isChecked = isMasterEnabled
 
+        // 리스너 설정
         switchMasterToggle.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit { putBoolean("is_master_enabled", isChecked) }
             val msg = if (isChecked) "자동 기능 활성화됨" else "자동 기능 비활성화됨"
@@ -95,28 +106,18 @@ class MainActivity : AppCompatActivity() {
             updateStatus()
         }
         
-        migrateLegacyAppData()
-        refreshAppListUi()
-        
-        val actionType = prefs.getString("action_type", "shutdown")
-        when (actionType) {
-            "airplane" -> radioAirplane.isChecked = true
-            "none" -> radioNone.isChecked = true
-            else -> radioShutdown.isChecked = true
-        }
-        
-        updateActionDelayUi(actionType ?: "shutdown")
-        
-        radioGroupAction.setOnCheckedChangeListener { _, checkedId ->
-            val type = when (checkedId) {
-                R.id.radioAirplane -> "airplane"
-                R.id.radioNone -> "none"
-                else -> "shutdown"
-            }
-            prefs.edit { putString("action_type", type) }
-            updateActionDelayUi(type)
+        switchAirplaneMode.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit { putBoolean("is_airplane_mode_enabled", isChecked) }
+            Toast.makeText(this, "비행기 모드 자동 실행: ${if(isChecked) "켜짐" else "꺼짐"}", Toast.LENGTH_SHORT).show()
         }
 
+        switchSystemShutdown.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit { putBoolean("is_system_shutdown_enabled", isChecked) }
+            Toast.makeText(this, "시스템 전원 자동 종료: ${if(isChecked) "켜짐" else "꺼짐"}", Toast.LENGTH_SHORT).show()
+        }
+        
+        migrateLegacyAppData()
+        refreshAppListUi()
         setupButtonListeners()
         requestNotificationPermission()
     }
@@ -239,26 +240,11 @@ class MainActivity : AppCompatActivity() {
         llAppListContainer.addView(row)
     }
 
-    private fun updateActionDelayUi(actionType: String) {
-        val isEnabled = actionType != "none"
-        editSystemDelayMinutes.isEnabled = isEnabled
-        btnSaveSystemDelay.isEnabled = isEnabled
-        
-        // 비행기 모드일 때만 보안잠금 설정 버튼 활성화
-        btnLockScreenSettings.isEnabled = (actionType == "airplane")
-        
-        if (!isEnabled) {
-            editSystemDelayMinutes.setText("")
-            editSystemDelayMinutes.hint = "-"
-        } else {
-            val savedSystemMinutes = prefs.getInt("system_shutdown_delay_minutes", 90)
-            editSystemDelayMinutes.setText(savedSystemMinutes.toString())
-        }
-    }
-
     private fun setupButtonListeners() {
         findViewById<Button>(R.id.btnSaveAppDelay).setOnClickListener { saveAppShutdownDelay() }
-        btnSaveSystemDelay.setOnClickListener { saveSystemShutdownDelay() }
+        btnSaveAirplaneDelay.setOnClickListener { saveAirplaneDelay() }
+        btnSaveSystemShutdownDelay.setOnClickListener { saveSystemShutdownDelay() }
+        
         findViewById<Button>(R.id.btnRequestNotification).setOnClickListener { requestNotificationPermission() }
         findViewById<Button>(R.id.btnFullScreenIntent).setOnClickListener { openFullScreenIntentSettings() }
         findViewById<Button>(R.id.btnDrawOverlay).setOnClickListener { openDrawOverlaySettings() }
@@ -351,13 +337,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun saveAirplaneDelay() {
+        val minutesText = editAirplaneDelayMinutes.text.toString()
+        if (minutesText.isNotEmpty()) {
+            val minutes = minutesText.toInt()
+            prefs.edit { putInt("airplane_mode_delay_minutes", minutes) }
+            Toast.makeText(this, "비행기 모드 대기: ${minutes}분 저장됨", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "시간(분)을 입력해주세요.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun saveSystemShutdownDelay() {
-        val minutesText = editSystemDelayMinutes.text.toString()
+        val minutesText = editSystemShutdownDelayMinutes.text.toString()
         if (minutesText.isNotEmpty()) {
             val minutes = minutesText.toInt()
             prefs.edit { putInt("system_shutdown_delay_minutes", minutes) }
-            Toast.makeText(this, "동작 대기 시간: ${minutes}분 저장됨", Toast.LENGTH_SHORT).show()
-            updateStatus()
+            Toast.makeText(this, "시스템 종료 대기: ${minutes}분 저장됨", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(this, "시간(분)을 입력해주세요.", Toast.LENGTH_SHORT).show()
         }
